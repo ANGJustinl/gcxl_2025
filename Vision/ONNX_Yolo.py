@@ -1,65 +1,108 @@
-# https://blog.csdn.net/qq_42589613/article/details/140040501
-# coding:utf-8
+# 24.9.22 优化了参数显示 | 对内存占用更小
 import cv2
-import onnxruntime as rt
 import torch
 from logger import logger
-from ultralytics.utils import yaml_load
-from ultralytics.utils.checks import check_yaml
+from picamera2 import Picamera2
+from ultralytics import YOLO
 
-from utils import *
+from utils import random_color
 
+model = YOLO("Vision/models/half_yolo11s.onnx", task="detect")
+logger.info("Pre-trained YOLOv11s Model loaded")
 
-coco_yaml_path = "Vision\coco8.yaml"
-Model_path = "Vision\models\yolov10s_hg.onnx"
-
-with open(coco_yaml_path, "r") as config:
-    config = yaml_load(check_yaml(coco_yaml_path))
-std_h, std_w = 640, 640  # 标准输入尺寸
-dic = config["names"]  # 得到的是模型类别字典
-class_list = list(dic.values())
-
-if torch.cuda.is_available():
-    logger.info("Using CUDA")
-    providers = ["CUDAExecutionProvider"]
-else:
-    logger.info("Using CPU")
-    providers = ["CPUExecutionProvider"]
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+logger.info(f"Device using: {device}")
 
 
-sess = rt.InferenceSession(
-    "intro_test\Yolo_v10\models\yolov10m_hg.onnx", providers=providers
-)  # yolov10模型onnx格式
-logger.info("Pre-trained YOLOv10s ONNX Model loaded")
+def Predict(model, img, classes=[], min_conf=0.5, device="cpu"):
+    """
+    Using Predict Model to predict objects in img.
+
+    Input classes to choose which to output.
+
+    eg. Predict(chosen_model, img_input, classes=[human], min_conf=0.5)
+    """
+    if classes:
+        results = model.predict(
+            img, classes=classes, conf=min_conf, device=device, stream=True
+        )
+    else:
+        results = model.predict(img, conf=min_conf, device=device, stream=True)
+    return results
 
 
-camera = cv2.VideoCapture(0)
+def Predict_and_detect(
+    model,
+    img,
+    classes=[],
+    min_conf=0.5,
+    rectangle_thickness=2,
+    text_thickness=1,
+    device="cpu",
+):
+    """
+    Using Predict Model to predict objects in img and detect the objects out.
+
+    Input classes to choose which to output.
+
+    eg. Predict_and_detect(chosen_model, img, classes=[], conf=0.5, rectangle_thickness=2, text_thickness=1)
+    """
+    results = Predict(model, img, classes, min_conf=min_conf, device=device)
+    for result in results:
+        for box in result.boxes:
+            left, top, right, bottom = (
+                int(box.xyxy[0][0]),
+                int(box.xyxy[0][1]),
+                int(box.xyxy[0][2]),
+                int(box.xyxy[0][3]),
+            )
+            confidence = box.conf.tolist()[0]
+            label = int(box.cls[0])
+            color = random_color(label)
+            cv2.rectangle(
+                img,
+                (left, top),
+                (right, bottom),
+                color=color,
+                thickness=rectangle_thickness,
+                lineType=cv2.LINE_AA,
+            )
+            caption = f"{result.names[label]} {confidence:.2f}"
+            w, h = cv2.getTextSize(caption, 0, 1, 2)[0]
+            cv2.rectangle(
+                img, (left - 3, top - 33), (left + w + 10, top), color, -1
+            )
+            cv2.putText(
+                img,
+                caption,
+                (left, top - 5),
+                0,
+                1,
+                (0, 0, 0),
+                text_thickness,
+                16,
+            )
+    return img, results
+
+
+picam2 = Picamera2()
+picam2.start()
 while True:
     # read frame
-    ret, frame = camera.read()
-    start_time = time.time()  # 计算帧数
-    # 前处理
-    img_after = resize_image(frame, (std_w, std_h), True)  # （640， 640， 3）
-    # 将图像处理成输入的格式
-    data = img2input(img_after)
-    input_name = sess.get_inputs()[0].name
-    label_name = sess.get_outputs()[0].name
-    pred = sess.run([label_name], {input_name: data})[
-        0
-    ]  # 输出(8400x84, 84=80cls+4reg, 8400=3种尺度的特征图叠加), 这里的预测框的回归参数是xywh， 而不是中心点到框边界的距离
-    pred = std_output(pred)
-    # 置信度过滤+nms
-    result = nms(pred, 0.7, 0.4)  # [x,y,w,h,conf(最大类别概率),class]
-    # 坐标变换
-    result = cod_trf(result, frame, img_after)
-    image = draw(result, frame, class_list)
-    end_time = time.time()
-    image = frame_rate_caculate(image, start_time, end_time)
+    # ret, frame = camera.read()
+    image = picam2.capture_array("main")
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    # Perform object detection on an image
+    result_img, _ = Predict_and_detect(
+        model, image, classes=[], min_conf=0.5, device=device
+    )
+
     # Display results
-    cv2.imshow("YOLOv10 Inference", image)
+    cv2.imshow("YOLOv11 Inference", result_img)
     key = cv2.waitKey(1)
     if key == 32:  # 空格
         break
 
-camera.release()
+picam2.close()
 cv2.destroyAllWindows()

@@ -1,12 +1,15 @@
 # 24.9.22 优化了参数显示 | 对内存占用更小
+# 24.11.19 摄像头换用picamera库，优化代码结构
 import cv2
 import torch
+
 from logger import logger
+from picamera2 import Picamera2
 from ultralytics import YOLO
 
 from utils import random_color
 
-model = YOLO("Vision\models\yolov10n.pt")
+model = YOLO("yolov10n.pt")
 logger.info("Pre-trained YOLOv10s Model loaded")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -19,7 +22,7 @@ def Predict(model, img, classes=[], min_conf=0.5, device="cpu"):
 
     Input classes to choose which to output.
 
-    eg. Predict(chosen_model, img_input, classes=[human], min_conf=0.5)
+    eg. Predict(chosen_model, img_input, classes=[human], min_conf=0.5, device="cpu")
     """
     if classes:
         results = model.predict(
@@ -47,6 +50,7 @@ def Predict_and_detect(
     eg. Predict_and_detect(chosen_model, img, classes=[], conf=0.5, rectangle_thickness=2, text_thickness=1)
     """
     results = Predict(model, img, classes, min_conf=min_conf, device=device)
+    # captions = []
     for result in results:
         for box in result.boxes:
             left, top, right, bottom = (
@@ -67,6 +71,7 @@ def Predict_and_detect(
                 lineType=cv2.LINE_AA,
             )
             caption = f"{result.names[label]} {confidence:.2f}"
+            # captions.append(caption)
             w, h = cv2.getTextSize(caption, 0, 1, 2)[0]
             cv2.rectangle(
                 img, (left - 3, top - 33), (left + w + 10, top), color, -1
@@ -84,22 +89,17 @@ def Predict_and_detect(
     return img, results
 
 
-camera = cv2.VideoCapture(0)
+picam2 = Picamera2()
 while True:
-    # read frame
-    ret, frame = camera.read()
+    # Get image from camera
+    image = picam2.capture_image("main")
 
     # Perform object detection on an image
-    # result_img = model(frame)[0].plot()
-    result_img, _ = Predict_and_detect(
-        model, frame, classes=[], min_conf=0.5, device=device
+    # result_img, _ = Predict_and_detect(
+    #     model, image, classes=[], min_conf=0.5, device=device
+    # )
+    _, results = Predict_and_detect(
+        model, image, classes=[], min_conf=0.5, device=device
     )
 
-    # Display results
-    cv2.imshow("YOLOv10 Inference", result_img)
-    key = cv2.waitKey(1)
-    if key == 32:  # 空格
-        break
-
-camera.release()
-cv2.destroyAllWindows()
+    print(results)
