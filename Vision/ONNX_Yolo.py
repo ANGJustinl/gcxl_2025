@@ -27,7 +27,9 @@ def Predict(model, img, classes=[], min_conf=0.5, device="cpu"):
             img, classes=classes, conf=min_conf, device=device, stream=True
         )
     else:
-        results = model.predict(img, conf=min_conf, device=device, stream=True)
+        results = model.predict(
+            img, conf=min_conf, device=device, stream=True, half=True
+        )
     return results
 
 
