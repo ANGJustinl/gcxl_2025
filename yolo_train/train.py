@@ -3,8 +3,9 @@ import torch
 from ultralytics import YOLO
 
 
+# 写了好多最后还是直接改代码方便...
 def train_detection_model(
-    data_yaml_path, epochs=100, imgsz=640, batch_size=-1
+    data_yaml_path, epochs=10, imgsz=640, batch_size=-1
 ):
     """
     训练检测模型
@@ -25,8 +26,8 @@ def train_detection_model(
         device=device,
         batch=batch_size,
         workers=0,
-        format="engine",
-        dynamic=True,
+        format="openvino",
+        half=True
     )
     # 保存训练好的模型 (using time now as filename)
     model.save(f"output/{int(time.time())}_trained_model.pt")
@@ -34,5 +35,5 @@ def train_detection_model(
 
 
 if __name__ == "__main__":
-    path = "./datasets/"  # 数据集的路径
-    train_detection_model(path, epochs=8, imgsz=640)
+    path = "./datasets/rubbish_classification/rubbish.yaml"  # 数据集的路径
+    train_detection_model(path, epochs=10, imgsz=640)
