@@ -66,6 +66,7 @@
 
 
 # **更新历史记录**
+- 2024.11.26 提交[**第一版训练模型**](yolo_train/runs/detect/train4/weights/best.pt) [详情请见](https://github.com/ANGJustinl/gcxl_2025/commit/45ccdd66916cde3b24fd99c5f0d7b84ee9d2c766)
 - 2024.11.07 修正Readme,完善分支保护。
 - 2024.10.31 提交物体识别Yolo代码。
 - 2024.10.15 完成初赛任务文档的编写。

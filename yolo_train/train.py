@@ -4,9 +4,7 @@ from ultralytics import YOLO
 
 
 # 写了好多最后还是直接改代码方便...
-def train_detection_model(
-    data_yaml_path, epochs=10, imgsz=640, batch_size=-1
-):
+def train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
     """
     训练检测模型
     :param data_yaml_path: 数据集的yaml文件路径
@@ -27,7 +25,7 @@ def train_detection_model(
         batch=batch_size,
         workers=0,
         format="openvino",
-        half=True
+        half=True,
     )
     # 保存训练好的模型 (using time now as filename)
     model.save(f"output/{int(time.time())}_trained_model.pt")
