@@ -4,7 +4,7 @@ import cv2
 from .utils import random_color
 
 
-def Predict(model, img, classes=[], min_conf=0.5, device="cpu"):
+def Predict(model, img, classes=[], min_conf=0.5, device="cpu", stream=True):
     """
     Using Predict Model to predict objects in img.
 

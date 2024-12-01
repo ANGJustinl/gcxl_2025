@@ -8,7 +8,7 @@ from vision import *
 
 def main():
     # Load pre-trained Model
-    model = YOLO("models/trash_openvino", task="detect")
+    model = YOLO("models/trash_openvino_model", task="detect")
     logger.info("Pre-trained YOLOv11s Model loaded")
 
     device = torch.device(
