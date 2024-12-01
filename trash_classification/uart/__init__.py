@@ -1,9 +1,10 @@
-# ANG 24.12.1
 import time
 import serial
+import logging
 
-from logger import logger
-
+# 设置日志记录
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class UARTCommunication:
     """
@@ -11,12 +12,6 @@ class UARTCommunication:
     """
 
     def __init__(self, port="/dev/ttyUSB0", baudrate=9600, timeout=1):
-        """
-        初始化串口通信
-        :param port: 串口设备路径
-        :param baudrate: 波特率
-        :param timeout: 读取超时时间（秒）
-        """
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -42,26 +37,13 @@ class UARTCommunication:
     def send_data(self, data):
         """
         发送数据到串口
-        :param data: 发送的字节数据或字符串
-        """
-        if self.serial and self.serial.is_open:
-            if isinstance(data, str):
-                data = data.encode("utf-8")
-            self.serial.write(data)
-            logger.info(f"Sent: {data}")
-        else:
-            raise Exception("Serial port not open.")
-
-    def send_int(self, data):
-        """
-        发送整数数据到串口
-        :param data: 发送的整数数据
+        :param data: 发送的字节数据
         """
         if self.serial and self.serial.is_open:
             if isinstance(data, int):
-                num = data
-                self.serial.write(num.to_bytes(2, "big"))
-                logger.info(f"Sent: {data}")
+                data = chr(data)  # 将整数转换为字符
+            self.serial.write(data.encode("utf-8"))
+            logger.info(f"Sent: {data}")
         else:
             raise Exception("Serial port not open.")
 
@@ -75,21 +57,6 @@ class UARTCommunication:
                 data = self.serial.readline().decode("utf-8").strip()
                 logger.info(f"Received: {data}")
                 return data
-            return None
-        else:
-            raise Exception("Serial port not open.")
-
-    def receive_int(self):
-        """
-        从串口接收整数数据
-        :return: 接收到的整数数据
-        """
-        if self.serial and self.serial.is_open:
-            if self.serial.in_waiting > 0:
-                data = self.serial.read(2)
-                num = int.from_bytes(data, "big")
-                logger.info(f"Received: {num}")
-                return num
             return None
         else:
             raise Exception("Serial port not open.")
@@ -109,23 +76,11 @@ if __name__ == "__main__":
     try:
         uart.connect()
         while True:
-            uart.send_int("1")
-            response = uart.receive_int()
-            if response:
-                logger.info(f"Response: {response}")
-            time.sleep(1)
-
-            uart.send_int("2")
-            response = uart.receive_int()
-            if response:
-                logger.info(f"Response: {response}")
-            time.sleep(1)
-
-            uart.send_int("3")
-            response = uart.receive_int()
-            if response:
-                logger.info(f"Response: {response}")
-            time.sleep(1)
+            for i in range(10):  # 发送0到9数字
+                uart.send_data(i)
+                response = uart.receive_data()
+                if response:
+                    logger.info(f"Response: {response}")
 
     except KeyboardInterrupt:
         logger.exception("Exiting program.")
