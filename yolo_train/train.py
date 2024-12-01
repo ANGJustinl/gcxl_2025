@@ -31,7 +31,10 @@ def train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
     model.save(f"output/{int(time.time())}_trained_model.pt")
     return True
 
-def continue_train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
+
+def continue_train_detection_model(
+    data_yaml_path, epochs=10, imgsz=640, batch_size=-1
+):
     """
     训练检测模型
     :param data_yaml_path: 数据集的yaml文件路径
@@ -42,7 +45,9 @@ def continue_train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_s
     # Using GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 加载模型 Using device
-    model = YOLO("./datasets/rubbish_classification/rubbish.yaml").load("../runs/train4/last.pt")
+    model = YOLO("./datasets/rubbish_classification/rubbish.yaml").load(
+        "../runs/train4/last.pt"
+    )
     # 训练模型
     results = model.train(
         data=data_yaml_path,
