@@ -32,9 +32,7 @@ def train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
     return True
 
 
-def continue_train_detection_model(
-    data_yaml_path, epochs=10, imgsz=640, batch_size=-1
-):
+def continue_train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
     """
     训练检测模型
     :param data_yaml_path: 数据集的yaml文件路径

@@ -11,9 +11,7 @@ def main():
     model = YOLO("models/trash_openvino_model", task="detect")
     logger.info("Pre-trained YOLOv11s Model loaded")
 
-    device = torch.device(
-        "cuda" if torch.cuda.is_available() else "cpu"
-    )  # 可惜没cuda
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 可惜没cuda
     logger.info(f"Device using: {device}")
 
     # Initialize camera

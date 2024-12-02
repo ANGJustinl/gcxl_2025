@@ -4,7 +4,6 @@ from logger import logger
 from picamera2 import Picamera2
 from ultralytics import YOLO
 
-from uart import UARTCommunication
 from vision import *
 
 
@@ -55,9 +54,7 @@ def classify(
 
     # Sort the dictionary by confidence in descending order
     confident_objects = dict(
-        sorted(
-            confident_objects.items(), key=lambda item: item[1], reverse=True
-        )
+        sorted(confident_objects.items(), key=lambda item: item[1], reverse=True)
     )
 
     # Close the camera and return the dictionary of confident objects
