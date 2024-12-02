@@ -208,9 +208,7 @@ def cod_trf(result, pre, after):
     )  # 计算平移的量
     ret_x1, ret_x2 = (x1 - x_move) * scale, (x2 - x_move) * scale
     ret_y1, ret_y2 = (y1 - y_move) * scale, (y2 - y_move) * scale
-    ret = np.array([ret_x1, ret_y1, ret_x2, ret_y2, conf, cls]).transpose(
-        (1, 0)
-    )
+    ret = np.array([ret_x1, ret_y1, ret_x2, ret_y2, conf, cls]).transpose((1, 0))
     return ret
 
 

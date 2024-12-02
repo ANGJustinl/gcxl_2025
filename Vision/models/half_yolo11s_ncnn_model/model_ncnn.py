@@ -9,9 +9,7 @@ def test_inference():
     out = []
 
     with ncnn.Net() as net:
-        net.load_param(
-            "Vision\models\base_yolo11s_ncnn_model\model.ncnn.param"
-        )
+        net.load_param("Vision\models\base_yolo11s_ncnn_model\model.ncnn.param")
         net.load_model("Vision\models\base_yolo11s_ncnn_model\model.ncnn.bin")
 
         with net.create_extractor() as ex:

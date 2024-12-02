@@ -73,9 +73,7 @@ def Predict_and_detect(
             caption = f"{result.names[label]} {confidence:.2f}"
             # captions.append(caption)
             w, h = cv2.getTextSize(caption, 0, 1, 2)[0]
-            cv2.rectangle(
-                img, (left - 3, top - 33), (left + w + 10, top), color, -1
-            )
+            cv2.rectangle(img, (left - 3, top - 33), (left + w + 10, top), color, -1)
             cv2.putText(
                 img,
                 caption,
