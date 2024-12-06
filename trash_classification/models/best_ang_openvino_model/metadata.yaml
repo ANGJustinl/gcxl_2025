@@ -1,0 +1,17 @@
+description: Ultralytics YOLO11 model trained on ./datasets/rubbish_2/rubbish2.yaml
+author: Ultralytics
+date: '2024-12-06T18:54:07.275018'
+version: 8.3.40
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: recyclable waste
+  1: hazardous waste
+  2: kitchen waste
+  3: other waste
