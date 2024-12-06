@@ -8,7 +8,7 @@ from vision import *
 
 def main():
     # Load pre-trained Model
-    model = YOLO("models/trash_openvino_model", task="detect")
+    model = YOLO("models/best_ang_openvino_model", task="detect")
     logger.info("Pre-trained YOLOv11s Model loaded")
 
     device = torch.device(
@@ -27,7 +27,7 @@ def main():
 
         # Perform object detection on an image
         result_img, _ = Predict_and_detect(
-            model, image, classes=[], min_conf=0.5, device=device
+            model, image, classes=[], min_conf=0.7, device=device
         )
 
         # Display results
