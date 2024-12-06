@@ -1,69 +1,70 @@
-# ANG 24.12.1
+import cv2
 import time
-from logger import logger
-from picamera2 import Picamera2
+import logging
+
 from ultralytics import YOLO
 
-from uart import UARTCommunication
-from vision import *
+# 设置日志级别
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-def classify(
-    classify_time: int = 10, query_time: float = 0.3, confidence_threshold=0.7
-) -> dict:
-    """
-    This function takes a picture using the PiCamera2 module and performs object detection using the YOLOv11s model.
-    It returns a dictionary containing the class and confidence of the detected object.
-    :param classify_time: The number of times to take a picture and perform object detection.
-    :param confidence_threshold: The minimum confidence level required for an object to be detected.
-    :return: A dictionary containing the class and confidence of the detected object.
-    """
-    # Load pre-trained Model
-    model = YOLO("models/trash_openvino_model", task="detect")
-    logger.info("Pre-trained YOLOv11s Model loaded")
+def capture_and_detect(model_path, max_confidence=0, duration=3):
+    # 加载YOLO模型
+    model = YOLO(model_path)
 
-    # Initialize camera
-    picam2 = Picamera2()
-    picam2.start()
+    # 初始化摄像头
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("无法打开摄像头")
+        return
 
-    results_list = []
-    image_dict = {}
-    # Perform object detection on an image and get the class of the detected object
-    for i in range(classify_time):
-        image = picam2.capture_array("main")
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        image_dict[i] = image
+    # 获取视频参数
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = int(fps * duration)
+    best_detection = None
 
-        results = Predict(model, image)
-        results_list.append(results)
-        logger.info(f"Detection {i+1}/{classify_time} complete")
-        time.sleep(query_time)
+    print(f"孩子们我们有救了！现在开始录制 {duration} 秒视频...")
+    start_time = time.time()
 
-    # Loop through the results and print the class and confidence
-    confident_objects = {}
-    for i in results_list:
+    frames = []
+    while len(frames) < frame_count:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frames.append(frame)
+
+        # 使用YOLO进行检测
+        results = model(frame)
+
+        # 获取当前帧中置信度最高的检测结果
         for result in results:
-            for box in result.boxes:
-                confidence = box.conf.tolist()[0]
-                if confidence < confidence_threshold:
-                    continue
-                image = image_dict[i]
-                label = int(box.cls[0])
-                cv2.imwrite(f"detections/{i}_{label}_{confidence}.jpg", image)
-                confident_objects[result.names[label]] = confidence
-    image_dict.clear()
+            if len(result.boxes.conf) > 0:
+                conf = float(result.boxes.conf.max())
+                if conf > max_confidence:
+                    max_confidence = conf
+                    # 获取类别名称
+                    class_id = int(result.boxes.cls[result.boxes.conf.argmax()])
+                    class_name = model.names[class_id]
+                    best_detection = (class_name, conf)
 
-    # Sort the dictionary by confidence in descending order
-    confident_objects = dict(
-        sorted(
-            confident_objects.items(), key=lambda item: item[1], reverse=True
-        )
-    )
+        if time.time() - start_time >= duration:
+            break
 
-    # Close the camera and return the dictionary of confident objects
-    picam2.close()
-    return confident_objects
+    # 释放摄像头
+    cap.release()
+
+    if best_detection:
+        logger.info(f"\n检测结果:")
+        logger.info(f"类别: {best_detection[0]}")
+        logger.info(f"置信度: {best_detection[1]:.2%}")
+        return {"Status": True, "Class": best_detection[0], "Confidence": best_detection[1]}
+    else:
+        logger.error("未检测到任何对象")
+        return {"Status": False, "Class": None, "Confidence": None}
 
 
 if __name__ == "__main__":
-    print(classify())
+    model_path = "./models/train11/weights/best.pt"
+    res = capture_and_detect(model_path)
+    logger.info(res)
