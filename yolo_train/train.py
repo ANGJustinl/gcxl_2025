@@ -1,10 +1,13 @@
+#import os
+#os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
 import time
 import torch
 from ultralytics import YOLO
 
 
 # 写了好多最后还是直接改代码方便...
-def train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
+def train_detection_model(data_yaml_path, epochs=50, imgsz=640, batch_size=0.8):
     """
     训练检测模型
     :param data_yaml_path: 数据集的yaml文件路径
@@ -14,8 +17,10 @@ def train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
     """
     # Using GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
     # 加载模型 Using device
-    model = YOLO("./yolov11.yaml").load("model/yolo11n.pt")
+    #model = YOLO("./yolov11.yaml").load("model/yolo11n.pt")
+    model = YOLO('./model/wpy_v3.pt').to(device)
     # 训练模型
     results = model.train(
         data=data_yaml_path,
@@ -24,11 +29,11 @@ def train_detection_model(data_yaml_path, epochs=10, imgsz=640, batch_size=-1):
         device=device,
         batch=batch_size,
         workers=0,
-        format="openvino",
         half=True,
     )
     # 保存训练好的模型 (using time now as filename)
     model.save(f"output/{int(time.time())}_trained_model.pt")
+    print(results)
     return True
 
 
@@ -64,5 +69,5 @@ def continue_train_detection_model(
 
 
 if __name__ == "__main__":
-    path = "./datasets/rubbish_classification/rubbish.yaml"  # 数据集的路径
-    train_detection_model(path, epochs=10, imgsz=640)
+    path = "./datasets/rubbish_2/rubbish2.yaml"  # 数据集的路径
+    train_detection_model(path, epochs=50, imgsz=640)

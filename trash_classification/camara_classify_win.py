@@ -10,7 +10,7 @@ from vision import *
 
 logger = logging.getLogger()
 
-model = YOLO("./models/best_ang.pt")
+model = YOLO("./models/best.pt")
 logger.info("Pre-trained Model loaded")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

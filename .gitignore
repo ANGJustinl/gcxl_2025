@@ -1,5 +1,8 @@
 *.PUB
 trash_classification_tf2.3-master
+*.png
+yolo_train/datasets/**
+yolo_train/runs/**
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
